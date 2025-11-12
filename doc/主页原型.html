@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>面试八股文智能刷题平台 - 原型图</title>
+    <style>
+      /* 简洁默认样式 */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          Helvetica, Arial, 'PingFang SC', 'Noto Sans CJK SC',
+          'Source Han Sans SC', 'Microsoft YaHei', sans-serif;
+        color: #222;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* 页面容器 */
+      .container {
+        max-width: 1060px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+
+      /* 顶部导航 */
+      .nav {
+        border-bottom: 1px solid #eee;
+        background: #fff;
+      }
+      .nav-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+      }
+      .brand-logo {
+        width: 28px;
+        height: 28px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        background: #111827;
+        color: #fff;
+        font-size: 14px;
+      }
+      .brand-text {
+        white-space: nowrap;
+      }
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        flex-shrink: 0;
+      }
+      .nav-link {
+        padding: 8px 10px;
+        border-radius: 8px;
+      }
+      .nav-link:hover {
+        background: #f5f5f5;
+      }
+      .nav-link.active {
+        color: #111827;
+        position: relative;
+      }
+      /* “局部底部高亮”效果 */
+      .nav-link.active::after {
+        content: '';
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        bottom: 6px;
+        height: 10px;
+        background: #facc15; /* 主题感更强的暖黄色 */
+        border-radius: 6px;
+        z-index: 0;
+      }
+      .nav-link.active > span {
+        position: relative;
+        z-index: 1; /* 让文字覆盖在高亮块上方 */
+      }
+      .nav-search {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1 1 200px;
+      }
+      .nav-search input {
+        width: 100%;
+        max-width: 260px;
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 999px;
+        font-size: 14px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+      .nav-search input:focus {
+        outline: none;
+        border-color: #111827;
+        box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.12);
+      }
+      /* 账号区（搜索框右侧） */
+      .nav-account {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding-left: 8px;
+      }
+      .nav-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 999px;
+        background: #e5e7eb; /* 占位灰 */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #6b7280;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid #d1d5db;
+      }
+      .nav-username {
+        color: #374151;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      /* 头部横幅 */
+      .hero {
+        background: #fff;
+      }
+      .hero-inner {
+        padding: 48px 0;
+        text-align: center;
+      }
+      .hero-title {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+      }
+      .hero-sub {
+        margin-top: 10px;
+        color: #666;
+      }
+      .hero-actions {
+        margin-top: 20px;
+        display: inline-flex;
+        gap: 12px;
+      }
+      .btn {
+        padding: 10px 16px;
+        border: 1px solid #111827;
+        background: #111827;
+        color: #fff;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn.secondary {
+        background: #fff;
+        color: #111827;
+      }
+      .btn:hover {
+        opacity: 0.9;
+      }
+
+      /* 全局 3:6:3 栅格布局（左右留白 3 份，中间内容 6 份） */
+      .layout-363 {
+        display: grid;
+        grid-template-columns: 1fr 2fr 1fr; /* 1 : 2 : 1 => 25% / 50% / 25% */
+        width: 100%;
+      }
+      /* 顶部导航左右留白略缩小（中心更宽） */
+      .nav > .layout-363 {
+        grid-template-columns: 0.9fr 2.2fr 0.9fr; /* 22.5% / 55% / 22.5% */
+      }
+      .col-center {
+        grid-column: 2;
+      }
+      @media (max-width: 900px) {
+        .layout-363 {
+          display: block; /* 小屏时内容 100% 宽 */
+        }
+      }
+
+      /* 3-6-3 布局：大屏中间 6 等分，两侧各 3 等分为空白 */
+      @media (min-width: 901px) {
+        .content-6 {
+          width: 50%;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      }
+      @media (max-width: 900px) {
+        .content-6 {
+          width: 100%;
+        }
+      }
+
+      /* 三栏区块 */
+      .features {
+        padding: 22px 0 40px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+      }
+      .card {
+        border: none;
+        border-radius: 12px;
+        padding: 16px;
+        background: #fff;
+      }
+      .card-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .card-desc {
+        color: #666;
+      }
+      .card-list {
+        margin-top: 8px;
+        display: grid;
+        gap: 6px;
+        color: #444;
+      }
+      /* 占满内容列的单卡片样式 */
+      .card-full {
+        width: 100%;
+        /* 稍微变淡的暗色，叠加一点点暖黄调，保持黑白黄主色 */
+        background: linear-gradient(135deg, #1f2937 0%, #2d3748 100%),
+          linear-gradient(
+            0deg,
+            rgba(250, 204, 21, 0.06),
+            rgba(250, 204, 21, 0.06)
+          );
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+      /* 标签列表 */
+      .tag-list {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px; /* 统一间距 */
+      }
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center; /* 居中文本 */
+        height: 40px; /* 固定高度 */
+        padding: 0 12px; /* 水平内边距 */
+        width: 100%; /* 占满网格单元，保证同宽 */
+        border-radius: 12px;
+        border: none;
+        background: #1f2937; /* 深灰标签底色 */
+        color: #f3f4f6; /* 浅色文字 */
+        font-size: 14px;
+        font-weight: 700;
+        transition: background 0.2s ease, border-color 0.2s ease;
+      }
+      .tag:hover {
+        background: #facc15; /* 暖黄点缀 */
+        color: #111827;
+      }
+      /* 题库集合网格 */
+      .bank-grid {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 22px;
+      }
+      @media (min-width: 1200px) {
+        .bank-grid {
+          grid-template-columns: repeat(4, 1fr); /* 大屏时固定每行 4 个 */
+        }
+      }
+      .bank-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        height: 108px; /* 放大卡片高度 */
+        padding: 16px 16px;
+        border-radius: 12px;
+        background: #ffffff; /* 黑白黄主题下，卡片用白色对比 */
+        color: #111827;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      }
+      .bank-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: #fef3c7; /* 淡黄色图标底色 */
+        color: #92400e;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 14px;
+      }
+      .bank-title {
+        font-weight: 800;
+        font-size: 15px;
+        line-height: 1.2;
+      }
+      .bank-sub {
+        margin-top: 6px;
+        font-size: 12px;
+        color: #6b7280;
+      }
+      /* 区块标题（放在卡片外部） */
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 800;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      /* 小屏适配 */
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .hero-inner {
+          padding: 36px 0;
+        }
+        .hero-title {
+          font-size: 24px;
+        }
+      }
+      @media (max-width: 720px) {
+        .nav-inner {
+          height: auto;
+          padding: 12px 0;
+        }
+        .nav-links {
+          order: 3;
+          width: 100%;
+          justify-content: center;
+          gap: 16px;
+        }
+        .nav-search {
+          order: 2;
+          width: 100%;
+          justify-content: center;
+        }
+        .nav-account {
+          order: 2;
+          width: 100%;
+          justify-content: center;
+          padding-left: 0;
+          margin-top: 8px;
+        }
+        .nav-search input {
+          max-width: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 顶部导航 -->
+    <header class="nav">
+      <div class="layout-363">
+        <div class="col-center nav-inner">
+          <div class="brand">
+            <span class="brand-logo">猿</span>
+            <span class="brand-text">面试猿刷题</span>
+          </div>
+          <nav class="nav-links">
+            <a class="nav-link active" href="#"><span>主页</span></a>
+            <a class="nav-link" href="#">题库</a>
+            <a class="nav-link" href="#">学习</a>
+            <a class="nav-link" href="#">AI</a>
+          </nav>
+          <div class="nav-search">
+            <input type="search" placeholder="搜索题目" aria-label="搜索题目" />
+          </div>
+          <div class="nav-account" aria-label="账号信息">
+            <div class="nav-avatar" aria-hidden="true">U</div>
+            <div class="nav-username">用户名</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 头部横幅 -->
+    <section class="hero">
+      <div class="layout-363">
+        <div class="col-center hero-inner">
+          <div class="hero-title">面试八股文智能刷题平台</div>
+          <div class="hero-sub">理论精通 • 概念理解 • 面试必备</div>
+          <div class="hero-actions">
+            <button class="btn">每日一题</button>
+            <button class="btn secondary">AI 陪练</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 三栏功能区 -->
+    <main class="features">
+      <div class="layout-363">
+        <div class="col-center">
+          <div class="section-title">📌 面试题库</div>
+          <div class="card card-full">
+            <div class="tag-list" aria-label="面试方向">
+              <a class="tag" href="#">前端工程</a>
+              <a class="tag" href="#">后端开发</a>
+              <a class="tag" href="#">算法与数据结构</a>
+              <a class="tag" href="#">大模型 / LLM</a>
+              <a class="tag" href="#">数据库与存储</a>
+              <a class="tag" href="#">分布式与微服务</a>
+              <a class="tag" href="#">网络与操作系统</a>
+              <a class="tag" href="#">安全与隐私</a>
+              <a class="tag" href="#">移动端开发</a>
+              <a class="tag" href="#">测试与 DevOps</a>
+            </div>
+          </div>
+          <!-- 题库集合放到卡片外部，作为独立模块 -->
+          <div class="bank-grid" aria-label="题库集合">
+            <a class="bank-card" href="#">
+              <div class="bank-icon">J</div>
+              <div>
+                <div class="bank-title">Java 热门面试题</div>
+                <div class="bank-sub">高频 200 题</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">JS</div>
+              <div>
+                <div class="bank-title">前端基础题库</div>
+                <div class="bank-sub">HTML/CSS/JS</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">DB</div>
+              <div>
+                <div class="bank-title">MySQL 面试题</div>
+                <div class="bank-sub">索引/事务/调优</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">RD</div>
+              <div>
+                <div class="bank-title">Redis 面试题</div>
+                <div class="bank-sub">数据结构/持久化</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">ALG</div>
+              <div>
+                <div class="bank-title">算法与数据结构</div>
+                <div class="bank-sub">Top100 高频</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">LLM</div>
+              <div>
+                <div class="bank-title">大模型面试题</div>
+                <div class="bank-sub">推理/微调/部署</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">SPR</div>
+              <div>
+                <div class="bank-title">Spring 面试题</div>
+                <div class="bank-sub">IOC/AOP/生态</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">SB</div>
+              <div>
+                <div class="bank-title">SpringBoot 面试题</div>
+                <div class="bank-sub">自动装配/监控</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">SC</div>
+              <div>
+                <div class="bank-title">SpringCloud 面试题</div>
+                <div class="bank-sub">注册/网关/熔断</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">OS</div>
+              <div>
+                <div class="bank-title">操作系统面试题</div>
+                <div class="bank-sub">进程/内存/文件</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">NET</div>
+              <div>
+                <div class="bank-title">计算机网络题库</div>
+                <div class="bank-sub">TCP/IP/HTTP</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">MS</div>
+              <div>
+                <div class="bank-title">微服务设计题库</div>
+                <div class="bank-sub">限流/熔断/隔离</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">BG</div>
+              <div>
+                <div class="bank-title">后端场景题库</div>
+                <div class="bank-sub">登陆/下单/库存</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">MQ</div>
+              <div>
+                <div class="bank-title">消息队列面试题</div>
+                <div class="bank-sub">Kafka/RabbitMQ</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">GO</div>
+              <div>
+                <div class="bank-title">Go 基础题库</div>
+                <div class="bank-sub">协程/内存/并发</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">SEC</div>
+              <div>
+                <div class="bank-title">安全与隐私题库</div>
+                <div class="bank-sub">加密/风控/合规</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">APP</div>
+              <div>
+                <div class="bank-title">移动端面试题</div>
+                <div class="bank-sub">iOS/Android</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">OPS</div>
+              <div>
+                <div class="bank-title">测试与 DevOps</div>
+                <div class="bank-sub">CI/CD/监控</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">ES</div>
+              <div>
+                <div class="bank-title">ElasticSearch 题库</div>
+                <div class="bank-sub">索引/搜索/调优</div>
+              </div>
+            </a>
+            <a class="bank-card" href="#">
+              <div class="bank-icon">ZK</div>
+              <div>
+                <div class="bank-title">Zookeeper 题库</div>
+                <div class="bank-sub">选举/一致性</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
