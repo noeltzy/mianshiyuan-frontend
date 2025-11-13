@@ -77,6 +77,13 @@ export function AdminDashboard() {
             <BookOpen className="h-5 w-5 text-primary" />
             <span className="font-medium text-gray-900">管理题库</span>
           </a>
+          <a
+            href="/admin/questions"
+            className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <FileText className="h-5 w-5 text-primary" />
+            <span className="font-medium text-gray-900">管理题目</span>
+          </a>
         </div>
       </div>
     </div>

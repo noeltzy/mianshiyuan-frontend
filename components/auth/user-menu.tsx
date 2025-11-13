@@ -25,8 +25,8 @@ export function UserMenu() {
     router.push("/profile");
   };
 
-  const handleBankManagement = () => {
-    router.push("/admin/banks");
+const handleAdminDashboard = () => {
+  router.push("/admin");
   };
 
   const handleAddQuestion = () => {
@@ -62,8 +62,8 @@ export function UserMenu() {
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleBankManagement}>
-              题库管理
+            <DropdownMenuItem onClick={handleAdminDashboard}>
+              管理后台
             </DropdownMenuItem>
           </>
         )}

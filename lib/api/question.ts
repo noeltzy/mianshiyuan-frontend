@@ -22,6 +22,7 @@ export async function listQuestions(
         title: params?.title,
         tag: params?.tag,
         difficulty: params?.difficulty,
+        bankId: params?.bankId,
       },
     }
   );
@@ -91,6 +92,17 @@ export interface QuestionBatchBindRequest {
   questionIdList: number[];
 }
 
+export interface BankQuestionQueryParams {
+  bankId: number;
+  current?: number;
+  size?: number;
+}
+
+export interface QuestionBatchUnbindRequest {
+  bankId: number;
+  questionIdList: number[];
+}
+
 export async function bindQuestionsToBank(
   data: QuestionBatchBindRequest
 ): Promise<ApiResponse<boolean>> {
@@ -101,3 +113,28 @@ export async function bindQuestionsToBank(
   return response.data;
 }
 
+export async function listBankQuestions(
+  params: BankQuestionQueryParams
+): Promise<PageQuestionVO> {
+  const response = await apiClient.get<ApiResponse<PageQuestionVO>>(
+    "/question",
+    {
+      params: {
+        bankId: params.bankId,
+        current: params.current || 1,
+        size: params.size || 10,
+      },
+    }
+  );
+  return response.data.data;
+}
+
+export async function unbindQuestionsFromBank(
+  data: QuestionBatchUnbindRequest
+): Promise<ApiResponse<boolean>> {
+  const response = await apiClient.post<ApiResponse<boolean>>(
+    "/question/unbind",
+    data
+  );
+  return response.data;
+}

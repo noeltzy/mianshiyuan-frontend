@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   BookOpen,
+  FileText,
   Menu,
   X,
   LogOut,
@@ -30,6 +31,11 @@ const adminNavItems = [
     href: "/admin/banks",
     label: "题库管理",
     icon: BookOpen,
+  },
+  {
+    href: "/admin/questions",
+    label: "题目管理",
+    icon: FileText,
   },
 ];
 

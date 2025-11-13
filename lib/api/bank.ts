@@ -35,9 +35,9 @@ export async function listBanks(
 /**
  * 根据 ID 获取题库详情
  */
-export async function getBankById(id: number) {
-  const response = await apiClient.get(`/bank/${id}`);
-  return response.data;
+export async function getBankById(id: number): Promise<BankVO> {
+  const response = await apiClient.get<ApiResponse<BankVO>>(`/bank/${id}`);
+  return response.data.data;
 }
 
 /**

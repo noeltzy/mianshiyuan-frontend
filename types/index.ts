@@ -108,6 +108,7 @@ export interface QuestionQueryParams {
   title?: string;
   tag?: string;
   difficulty?: number;
+  bankId?: number;
 }
 
 // 前端使用的题目类型（兼容旧代码）

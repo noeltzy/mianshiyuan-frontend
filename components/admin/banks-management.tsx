@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Edit, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,10 @@ import {
 import type { BankVO } from "@/types";
 import { getImageUploadCredentials } from "@/lib/api/file";
 import { uploadImageToOss } from "@/lib/oss/upload-image";
+import {
+  listBankQuestions,
+  unbindQuestionsFromBank,
+} from "@/lib/api/question";
 
 export function BanksManagement() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -39,8 +43,16 @@ export function BanksManagement() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [detailBank, setDetailBank] = useState<BankVO | null>(null);
+  const [detailCurrentPage, setDetailCurrentPage] = useState(1);
+  const [detailSelectedIds, setDetailSelectedIds] = useState<Set<number>>(
+    new Set()
+  );
+  const [detailError, setDetailError] = useState<string | null>(null);
 
   const pageSize = 10;
+  const detailPageSize = 8;
 
   // 查询全部标签供选择
   const { data: tagOptions } = useQuery<string[]>({
@@ -62,6 +74,23 @@ export function BanksManagement() {
   const availableTags = (tagOptions ?? []).filter(
     (tag) => !formData.tagList.includes(tag)
   );
+
+  const detailBankId = detailBank?.id ?? null;
+
+  const {
+    data: detailData,
+    isLoading: isDetailLoading,
+  } = useQuery({
+    queryKey: ["bankQuestions", detailBankId, detailCurrentPage],
+    queryFn: () =>
+      listBankQuestions({
+        bankId: detailBankId!,
+        current: detailCurrentPage,
+        size: detailPageSize,
+      }),
+    enabled: detailDialogOpen && !!detailBankId,
+    keepPreviousData: true,
+  });
 
   // 创建题库
   const createMutation = useMutation({
@@ -96,6 +125,35 @@ export function BanksManagement() {
         ossHost: credentials.ossHost,
       });
       return uploadImageToOss(file, credentials);
+    },
+  });
+
+  const unbindMutation = useMutation({
+    mutationFn: ({
+      bankId,
+      questionIds,
+    }: {
+      bankId: number;
+      questionIds: number[];
+    }) =>
+      unbindQuestionsFromBank({
+        bankId,
+        questionIdList: questionIds,
+      }),
+    onSuccess: () => {
+      if (detailBankId) {
+        queryClient.invalidateQueries({ queryKey: ["bankQuestions", detailBankId] });
+      }
+      queryClient.invalidateQueries({ queryKey: ["adminBanks"] });
+      setDetailSelectedIds(new Set());
+      setDetailError(null);
+    },
+    onError: (error: any) => {
+      setDetailError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "操作失败，请稍后重试"
+      );
     },
   });
 
@@ -160,6 +218,88 @@ export function BanksManagement() {
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  useEffect(() => {
+    setDetailSelectedIds(new Set());
+  }, [detailCurrentPage, detailBankId]);
+
+  const detailRecords = detailData?.records ?? [];
+  const detailTotal = detailData?.total ?? 0;
+  const detailPages =
+    detailData?.pages || (detailTotal ? Math.ceil(detailTotal / detailPageSize) : 0);
+  const detailAllSelected =
+    detailRecords.length > 0 &&
+    detailRecords.every(
+      (question) => question.id !== undefined && detailSelectedIds.has(question.id)
+    );
+  const detailIndeterminate =
+    detailRecords.length > 0 &&
+    detailRecords.some(
+      (question) => question.id !== undefined && detailSelectedIds.has(question.id)
+    ) &&
+    !detailAllSelected;
+
+  const handleViewDetails = (bank: BankVO) => {
+    setDetailBank(bank);
+    setDetailCurrentPage(1);
+    setDetailSelectedIds(new Set());
+    setDetailError(null);
+    setDetailDialogOpen(true);
+  };
+
+  const handleDetailSelectAll = (checked: boolean) => {
+    if (checked) {
+      setDetailSelectedIds(
+        new Set(
+          detailRecords
+            .filter((question) => question.id !== undefined)
+            .map((question) => question.id as number)
+        )
+      );
+    } else {
+      setDetailSelectedIds(new Set());
+    }
+  };
+
+  const handleDetailSelectOne = (id: number, checked: boolean) => {
+    const next = new Set(detailSelectedIds);
+    if (checked) {
+      next.add(id);
+    } else {
+      next.delete(id);
+    }
+    setDetailSelectedIds(next);
+  };
+
+  const handleDetailDeleteSelected = () => {
+    if (!detailBankId || detailSelectedIds.size === 0) {
+      return;
+    }
+    const confirmed = window.confirm(
+      `确定要从题库中移除选中的 ${detailSelectedIds.size} 道题目吗？`
+    );
+    if (!confirmed) {
+      return;
+    }
+    unbindMutation.mutate({
+      bankId: detailBankId,
+      questionIds: Array.from(detailSelectedIds),
+    });
+  };
+
+  const handleDetailDeleteSingle = (questionId: number) => {
+    if (!detailBankId) {
+      return;
+    }
+    const confirmed = window.confirm("确定要从题库中移除此题目吗？");
+    if (!confirmed) {
+      return;
+    }
+    unbindMutation.mutate({
+      bankId: detailBankId,
+      questionIds: [questionId],
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -355,6 +495,13 @@ export function BanksManagement() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleViewDetails(bank)}
+                          >
+                            详情
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleEdit(bank)}
                           >
                             <Edit className="h-4 w-4" />
@@ -409,6 +556,174 @@ export function BanksManagement() {
           </div>
         )}
       </div>
+
+      {/* 题库题目详情对话框 */}
+      <Dialog
+        open={detailDialogOpen}
+        onOpenChange={(open) => {
+          setDetailDialogOpen(open);
+          if (!open) {
+            setDetailBank(null);
+            setDetailCurrentPage(1);
+            setDetailSelectedIds(new Set());
+            setDetailError(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl w-full">
+          <DialogHeader>
+            <DialogTitle>题库题目详情</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-sm text-gray-600">
+                当前题库：
+                <span className="font-medium text-gray-900">
+                  {detailBank?.name || "-"}
+                </span>
+                {detailBankId && (
+                  <span className="ml-2 text-gray-500">ID: {detailBankId}</span>
+                )}
+              </div>
+              <Button
+                variant="destructive"
+                onClick={handleDetailDeleteSelected}
+                disabled={
+                  detailSelectedIds.size === 0 || unbindMutation.isPending
+                }
+              >
+                {unbindMutation.isPending
+                  ? "处理中..."
+                  : `批量移除 (${detailSelectedIds.size})`}
+              </Button>
+            </div>
+
+            {detailError && (
+              <div className="rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+                {detailError}
+              </div>
+            )}
+
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              {isDetailLoading ? (
+                <div className="p-6 text-center text-gray-600">加载中...</div>
+              ) : detailRecords.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 w-12 text-left">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            checked={detailAllSelected}
+                            ref={(input) => {
+                              if (input) input.indeterminate = detailIndeterminate;
+                            }}
+                            onChange={(event) =>
+                              handleDetailSelectAll(event.target.checked)
+                            }
+                          />
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          题目ID
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          标题
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          操作
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {detailRecords.map((question) => (
+                        <tr key={question.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                              checked={
+                                question.id !== undefined &&
+                                detailSelectedIds.has(question.id)
+                              }
+                              onChange={(event) =>
+                                question.id !== undefined &&
+                                handleDetailSelectOne(
+                                  question.id,
+                                  event.target.checked
+                                )
+                              }
+                            />
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                            {question.id}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-700 max-w-md truncate">
+                            {question.title}
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() =>
+                                question.id !== undefined &&
+                                handleDetailDeleteSingle(question.id)
+                              }
+                              disabled={unbindMutation.isPending}
+                            >
+                              删除
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-6 text-center text-gray-600">
+                  暂无题目
+                </div>
+              )}
+            </div>
+
+            {detailTotal > detailPageSize && detailPages > 0 && (
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-gray-600">
+                  共 {detailTotal} 道题目，第 {detailCurrentPage} / {detailPages} 页
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setDetailCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    disabled={detailCurrentPage === 1 || isDetailLoading}
+                  >
+                    上一页
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setDetailCurrentPage((prev) =>
+                        Math.min(detailPages, prev + 1)
+                      )
+                    }
+                    disabled={
+                      detailCurrentPage >= detailPages || isDetailLoading
+                    }
+                  >
+                    下一页
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* 创建/编辑对话框 */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

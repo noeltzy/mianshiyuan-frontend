@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Navbar } from "@/components/layout/navbar";
 import { Container } from "@/components/layout/container";
+import { MarkdownAnswerEditor } from "@/components/questions/markdown-answer-editor";
+import { cn } from "@/lib/utils";
 import {
   createQuestion,
   type QuestionCreateRequest,
@@ -25,6 +27,11 @@ export function AddQuestionPage() {
     submitForReview: false,
   });
   const [tagInput, setTagInput] = useState("");
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 查询全部标签供选择
   const { data: tagOptions } = useQuery<string[]>({
@@ -36,15 +43,34 @@ export function AddQuestionPage() {
     (tag) => !formData.tagList?.includes(tag)
   );
 
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
+
   // 创建题目
   const createMutation = useMutation({
     mutationFn: (data: QuestionCreateRequest) => createQuestion(data),
     onSuccess: () => {
-      router.push("/");
+      setFeedback({
+        type: "success",
+        message: "题目创建成功，正在跳转...",
+      });
+      redirectTimerRef.current = setTimeout(() => {
+        router.push("/");
+      }, 1500);
     },
     onError: (error: any) => {
       console.error("创建题目失败:", error);
-      // 错误会在UI中显示
+      const errorMessage =
+        error instanceof Error ? error.message : "创建题目失败，请稍后重试";
+      setFeedback({
+        type: "error",
+        message: errorMessage,
+      });
     },
   });
 
@@ -76,6 +102,10 @@ export function AddQuestionPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+    }
+    setFeedback(null);
     createMutation.mutate(formData);
   };
 
@@ -259,14 +289,13 @@ export function AddQuestionPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 答案
               </label>
-              <textarea
+              <MarkdownAnswerEditor
                 value={formData.answer || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, answer: e.target.value })
+                onChange={(markdown) =>
+                  setFormData({ ...formData, answer: markdown })
                 }
-                placeholder="请输入题目答案或解析"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                rows={8}
+                placeholder="请输入题目答案或解析，支持 Markdown 格式（可插入图片）"
+                height={400}
               />
             </div>
 
@@ -294,12 +323,17 @@ export function AddQuestionPage() {
               </div>
             </div>
 
-            {/* 错误提示 */}
-            {createMutation.isError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-600">
-                  创建题目失败：{createMutation.error instanceof Error ? createMutation.error.message : "未知错误"}
-                </p>
+            {/* 反馈提示 */}
+            {feedback && (
+              <div
+                className={cn(
+                  "rounded-lg border p-4",
+                  feedback.type === "success"
+                    ? "border-green-200 bg-green-50 text-green-700"
+                    : "border-red-200 bg-red-50 text-red-600"
+                )}
+              >
+                <p className="text-sm">{feedback.message}</p>
               </div>
             )}
 

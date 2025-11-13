@@ -92,7 +92,7 @@ export function QuestionBanks() {
                 {banks.map((bank: BankVO) => (
                   <Link
                     key={bank.id}
-                    href={`/questions/${bank.id}`}
+                    href={`/banks/${bank.id}`}
                     className="flex items-center gap-4 rounded-xl bg-white p-5 text-primary shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                   >
                     <Avatar className="h-16 w-16 flex-shrink-0 rounded-[10px]">

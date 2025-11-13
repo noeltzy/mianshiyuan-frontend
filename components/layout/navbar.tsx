@@ -14,8 +14,6 @@ import { Container } from "./container";
 
 const navLinks = [
   { href: "/", label: "主页" },
-  { href: "/questions", label: "题库" },
-  { href: "/study", label: "学习" },
   { href: "/ai", label: "AI" },
 ];
 

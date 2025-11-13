@@ -27,7 +27,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
     }
     // 如果没有token，重定向到首页
     if (!token && !isLoading) {
-      router.push("/");
+      router.replace("/");
       return;
     }
   }, [token, isLoading, router, isMounted]);
