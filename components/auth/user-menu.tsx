@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useUserStore } from "@/store/user-store";
+import { useUserStore, getUserDisplayName, getUserAvatarLetter } from "@/store/user-store";
 import { useLogout } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 
@@ -44,13 +44,13 @@ const handleAdminDashboard = () => {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <Avatar className="h-7 w-7">
-            <AvatarImage src={user.avatarUrl} alt={user.username} />
+            <AvatarImage src={user.avatarUrl} alt={getUserDisplayName(user)} />
             <AvatarFallback className="bg-gray-200 text-gray-600 text-xs font-bold border border-gray-300">
-              {user.username?.[0]?.toUpperCase() || "U"}
+              {getUserAvatarLetter(user)}
             </AvatarFallback>
           </Avatar>
           <span className="font-semibold text-gray-700 whitespace-nowrap">
-            {user.username}
+            {getUserDisplayName(user)}
           </span>
         </button>
       </DropdownMenuTrigger>

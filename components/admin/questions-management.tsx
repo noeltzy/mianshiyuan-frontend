@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, Upload, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -37,6 +38,7 @@ const difficultyFilterOptions = [
 ];
 
 export function QuestionsManagement() {
+  const router = useRouter();
   const [searchTitle, setSearchTitle] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -96,7 +98,9 @@ export function QuestionsManagement() {
     },
     onError: (error: any) => {
       setBindError(
-        error?.response?.data?.message || error?.message || "绑定失败，请稍后重试"
+        error?.response?.data?.message ||
+          error?.message ||
+          "绑定失败，请稍后重试"
       );
     },
   });
@@ -167,23 +171,29 @@ export function QuestionsManagement() {
           <h1 className="text-3xl font-bold text-gray-900">题目管理</h1>
           <p className="mt-2 text-gray-600">查看并管理题目列表（不显示答案）</p>
         </div>
-        {selectedIds.size > 0 && (
-          <Button
-            onClick={() => {
-              setBindDialogOpen(true);
-              setBindError(null);
-            }}
-            disabled={bindMutation.isPending}
-          >
-            添加到题库 ({selectedIds.size})
+        <div className="flex items-center gap-3">
+          <Button className="bg-black text-white hover:bg-gray-800">
+            <Upload className="mr-2 h-4 w-4" />
+            批量导入
           </Button>
-        )}
+          {selectedIds.size > 0 && (
+            <Button
+              onClick={() => {
+                setBindDialogOpen(true);
+                setBindError(null);
+              }}
+              disabled={bindMutation.isPending}
+            >
+              添加到题库 ({selectedIds.size})
+            </Button>
+          )}
+        </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex-1 relative w-full md:w-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <div className="relative w-full flex-1 md:w-auto">
+            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
             <Input
               type="search"
               placeholder="搜索题目标题..."
@@ -243,16 +253,16 @@ export function QuestionsManagement() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
         {isLoading ? (
           <div className="p-8 text-center text-gray-600">加载中...</div>
         ) : data?.records && data.records.length > 0 ? (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
+                <thead className="border-b border-gray-200 bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                    <th className="w-12 px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       <input
                         type="checkbox"
                         checked={isAllSelected}
@@ -260,36 +270,39 @@ export function QuestionsManagement() {
                           if (input) input.indeterminate = isIndeterminate;
                         }}
                         onChange={(e) => handleSelectAll(e.target.checked)}
-                        className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                        className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       ID
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       标题
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       描述
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       难度
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       标签
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       状态
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       创建时间
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                       浏览/收藏
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                      操作
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 bg-white">
                   {data.records.map((question) => {
                     const difficulty =
                       question.difficulty !== undefined
@@ -314,28 +327,28 @@ export function QuestionsManagement() {
 
                     return (
                       <tr key={question.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="whitespace-nowrap px-6 py-4">
                           <input
                             type="checkbox"
                             checked={selectedIds.has(question.id!)}
                             onChange={(e) =>
                               handleSelectOne(question.id!, e.target.checked)
                             }
-                            className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                           />
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
                           {question.id}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900">
                           {question.title}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate">
+                        <td className="max-w-xs truncate px-6 py-4 text-sm text-gray-600">
                           {question.description || "-"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${difficulty.className}`}
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${difficulty.className}`}
                           >
                             {difficulty.label}
                           </span>
@@ -343,16 +356,18 @@ export function QuestionsManagement() {
                         <td className="px-6 py-4 text-sm text-gray-600">
                           {question.tagList && question.tagList.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
-                              {question.tagList.slice(0, 3).map((tag, index) => (
-                                <span
-                                  key={index}
-                                  className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
+                              {question.tagList
+                                .slice(0, 3)
+                                .map((tag, index) => (
+                                  <span
+                                    key={index}
+                                    className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))}
                               {question.tagList.length > 3 && (
-                                <span className="px-2 py-1 text-gray-500 text-xs">
+                                <span className="px-2 py-1 text-xs text-gray-500">
                                   +{question.tagList.length - 3}
                                 </span>
                               )}
@@ -361,20 +376,35 @@ export function QuestionsManagement() {
                             "-"
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${status.className}`}
+                            className={`rounded-full px-2 py-1 text-xs font-medium ${status.className}`}
                           >
                             {status.label}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                           {question.createdAt
-                            ? new Date(question.createdAt).toLocaleString("zh-CN")
+                            ? new Date(question.createdAt).toLocaleString(
+                                "zh-CN"
+                              )
                             : "-"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                           {`${question.viewCount ?? 0} / ${question.favoriteCount ?? 0}`}
+                        </td>
+                        <td className="whitespace-nowrap px-6 py-4 text-sm">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              router.push(`/questions/edit/${question.id}`);
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <Edit className="h-3 w-3" />
+                            编辑
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -384,7 +414,7 @@ export function QuestionsManagement() {
             </div>
 
             {data.total > pageSize && totalPages > 0 && (
-              <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+              <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
                 <div className="text-sm text-gray-600">
                   共 {data.total} 条记录，第 {currentPage} / {totalPages} 页
                 </div>
@@ -392,7 +422,9 @@ export function QuestionsManagement() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
                     disabled={currentPage === 1}
                   >
                     上一页
@@ -426,7 +458,7 @@ export function QuestionsManagement() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
                 题库ID
               </label>
               <Input
@@ -438,10 +470,11 @@ export function QuestionsManagement() {
               />
             </div>
             <div className="text-sm text-gray-600">
-              已选择 <span className="font-semibold">{selectedIds.size}</span> 个题目
+              已选择 <span className="font-semibold">{selectedIds.size}</span>{" "}
+              个题目
             </div>
             {bindError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3">
                 <p className="text-sm text-red-600">{bindError}</p>
               </div>
             )}
@@ -470,5 +503,3 @@ export function QuestionsManagement() {
     </div>
   );
 }
-
-

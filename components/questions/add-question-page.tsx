@@ -12,12 +12,20 @@ import { MarkdownAnswerEditor } from "@/components/questions/markdown-answer-edi
 import { cn } from "@/lib/utils";
 import {
   createQuestion,
+  updateQuestion,
+  getQuestionById,
   type QuestionCreateRequest,
+  type QuestionUpdateRequest,
 } from "@/lib/api/question";
 import { getAllTags } from "@/lib/api/bank";
 
-export function AddQuestionPage() {
+interface AddQuestionPageProps {
+  questionId?: number;
+}
+
+export function AddQuestionPage({ questionId }: AddQuestionPageProps) {
   const router = useRouter();
+  const isEditMode = !!questionId;
   const [formData, setFormData] = useState<QuestionCreateRequest>({
     title: "",
     description: "",
@@ -38,6 +46,48 @@ export function AddQuestionPage() {
     queryKey: ["allTags"],
     queryFn: getAllTags,
   });
+
+  // 编辑模式下获取题目详情
+  const { data: questionData, isLoading: isLoadingQuestion, error: questionError } = useQuery({
+    queryKey: ["question", questionId],
+    queryFn: () => getQuestionById(questionId!),
+    enabled: isEditMode && !!questionId,
+  });
+
+  // 当获取到题目数据时，填充表单
+  useEffect(() => {
+    if (isEditMode && questionData) {
+      setFormData({
+        title: questionData.title || "",
+        description: questionData.description || "",
+        tagList: questionData.tagList || [],
+        answer: questionData.answer || "",
+        difficulty: questionData.difficulty,
+        submitForReview: false, // 编辑时默认不勾选，让用户重新选择
+      });
+    }
+  }, [questionData, isEditMode]);
+
+  // 处理获取题目详情失败的情况
+  useEffect(() => {
+    if (isEditMode && questionError) {
+      console.error("获取题目详情失败:", questionError);
+      const error = questionError as any;
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "获取题目详情失败，请稍后重试";
+      setFeedback({
+        type: "error",
+        message: errorMessage,
+      });
+      // 3秒后返回上一页
+      const timer = setTimeout(() => {
+        router.back();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [questionError, isEditMode, router]);
 
   const availableTags = (tagOptions ?? []).filter(
     (tag) => !formData.tagList?.includes(tag)
@@ -66,7 +116,34 @@ export function AddQuestionPage() {
     onError: (error: any) => {
       console.error("创建题目失败:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "创建题目失败，请稍后重试";
+        error?.response?.data?.message ||
+        error?.message ||
+        "创建题目失败，请稍后重试";
+      setFeedback({
+        type: "error",
+        message: errorMessage,
+      });
+    },
+  });
+
+  // 更新题目
+  const updateMutation = useMutation({
+    mutationFn: (data: QuestionUpdateRequest) => updateQuestion(questionId!, data),
+    onSuccess: () => {
+      setFeedback({
+        type: "success",
+        message: "题目更新成功，正在跳转...",
+      });
+      redirectTimerRef.current = setTimeout(() => {
+        router.back();
+      }, 1500);
+    },
+    onError: (error: any) => {
+      console.error("更新题目失败:", error);
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "更新题目失败，请稍后重试";
       setFeedback({
         type: "error",
         message: errorMessage,
@@ -106,15 +183,37 @@ export function AddQuestionPage() {
       clearTimeout(redirectTimerRef.current);
     }
     setFeedback(null);
-    createMutation.mutate(formData);
+    if (isEditMode) {
+      updateMutation.mutate(formData);
+    } else {
+      createMutation.mutate(formData);
+    }
   };
+
+  // 编辑模式下加载中
+  if (isEditMode && isLoadingQuestion) {
+    return (
+      <>
+        <Navbar />
+        <Container variant="default" className="py-8">
+          <div className="px-4 max-w-4xl mx-auto">
+            <div className="text-center py-12">
+              <p className="text-gray-600">加载题目详情中...</p>
+            </div>
+          </div>
+        </Container>
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
       <Container variant="default" className="py-8">
         <div className="px-4 max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">添加题目</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">
+            {isEditMode ? "编辑题目" : "添加题目"}
+          </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -343,16 +442,18 @@ export function AddQuestionPage() {
                 type="button"
                 variant="outline"
                 onClick={() => router.back()}
-                disabled={createMutation.isPending}
+                disabled={createMutation.isPending || updateMutation.isPending}
               >
                 取消
               </Button>
               <Button
                 type="submit"
-                disabled={createMutation.isPending}
+                disabled={createMutation.isPending || updateMutation.isPending}
                 className="min-w-24"
               >
-                {createMutation.isPending ? "提交中..." : "提交"}
+                {createMutation.isPending || updateMutation.isPending
+                  ? "提交中..."
+                  : "提交"}
               </Button>
             </div>
           </form>

@@ -1,6 +1,6 @@
 import { apiClient } from "./client";
 import { setToken, removeToken } from "@/lib/utils/token";
-import type { ApiResponse } from "@/types";
+import type { ApiResponse, User } from "@/types";
 
 /**
  * Token 响应类型
@@ -36,7 +36,19 @@ export async function login(credentials: LoginRequest): Promise<TokenResponse> {
     "/auth/login",
     credentials
   );
+  
+  // 检查响应数据
+  if (!response.data?.data) {
+    throw new Error(response.data?.message || "登录失败，请检查用户名和密码");
+  }
+  
   const { accessToken } = response.data.data;
+  
+  // 检查 accessToken 是否存在
+  if (!accessToken) {
+    throw new Error("登录响应中缺少访问令牌");
+  }
+  
   // 保存 token
   setToken(accessToken);
   return response.data.data;
@@ -72,6 +84,12 @@ export async function register(
  */
 export async function getCurrentUser(): Promise<User> {
   const response = await apiClient.get<ApiResponse<User>>("/auth/me");
+  
+  // 检查响应数据
+  if (!response.data?.data) {
+    throw new Error(response.data?.message || "获取用户信息失败");
+  }
+  
   return response.data.data;
 }
 
@@ -82,7 +100,19 @@ export async function refreshToken(): Promise<TokenResponse> {
   const response = await apiClient.post<ApiResponse<TokenResponse>>(
     "/auth/refresh"
   );
+  
+  // 检查响应数据
+  if (!response.data?.data) {
+    throw new Error(response.data?.message || "刷新令牌失败");
+  }
+  
   const { accessToken } = response.data.data;
+  
+  // 检查 accessToken 是否存在
+  if (!accessToken) {
+    throw new Error("刷新响应中缺少访问令牌");
+  }
+  
   // 更新 token
   setToken(accessToken);
   return response.data.data;

@@ -2,6 +2,7 @@
 export interface User {
   id: number;
   username: string;
+  nickname?: string; // 昵称，可选
   avatarUrl?: string;
   email?: string;
   phone?: string;
@@ -119,5 +120,57 @@ export interface Question {
   category: string;
   difficulty: "easy" | "medium" | "hard";
   tags: string[];
+}
+
+// 题目目录项类型
+export interface QuestionCatalogItemVO {
+  id: number;
+  title: string;
+}
+
+// 分页请求参数
+export interface PageRequest {
+  current?: number;
+  size?: number;
+}
+
+// 评论相关类型
+export interface CommentVO {
+  id: number;
+  questionId: number;
+  userVO: User;
+  parentId?: number | null;
+  children?: CommentVO[] | null; // 子评论数组（后端返回的嵌套结构）
+  commentType?: number;
+  content: string;
+  isPinned?: number;
+  likeCount?: number;
+  sortOrder?: number;
+  updatedAt?: string;
+  createdAt?: string;
+}
+
+// 回答评分相关类型
+export interface AnswerRatingVO {
+  answer: string; // 回答内容
+  feedback?: string; // 反馈
+  score: number; // 分数
+  createdAt?: string; // 创建时间
+}
+
+// 题目回答项类型
+export interface QuestionAnswerVO {
+  id: number; // 题目ID
+  title: string; // 题目标题
+  answerRatingVOList?: AnswerRatingVO[]; // 评分列表
+}
+
+// 分页回答响应类型
+export interface PageQuestionAnswerVO {
+  records: QuestionAnswerVO[];
+  total: number;
+  size: number;
+  current: number;
+  pages?: number;
 }
 

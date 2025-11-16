@@ -5,17 +5,22 @@ interface ContainerProps {
   children: ReactNode;
   className?: string;
   variant?: "default" | "nav";
+  leftSlot?: ReactNode;
+  rightSlot?: ReactNode;
 }
 
 /**
  * 布局容器组件
  * - default: 3:6:3 比例（左右空白各 3 份，中间内容 6 份）
  * - nav: 0.9:2.2:0.9 比例（Navbar 专用，左右空白更小）
+ * - leftSlot/rightSlot: 可选的左右侧插槽，不传入时为空白
  */
 export function Container({
   children,
   className,
   variant = "default",
+  leftSlot,
+  rightSlot,
 }: ContainerProps) {
   return (
     <div
@@ -31,15 +36,18 @@ export function Container({
         className
       )}
     >
-      {/* 左侧空白 */}
-      <div className="hidden lg:block" aria-hidden="true" />
-      
+      {/* 左侧空白或插槽 */}
+      <div className="hidden lg:block" aria-hidden="true">
+        {leftSlot}
+      </div>
+
       {/* 中间内容区域 */}
       <div className="lg:col-start-2">{children}</div>
-      
-      {/* 右侧空白 */}
-      <div className="hidden lg:block" aria-hidden="true" />
+
+      {/* 右侧空白或插槽 */}
+      <div className="hidden lg:block" aria-hidden="true">
+        {rightSlot}
+      </div>
     </div>
   );
 }
-

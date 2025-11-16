@@ -98,7 +98,7 @@ export function BankQuestionsList({ bankId }: BankQuestionsListProps) {
                   <tr key={question.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       <Link
-                        href={`/question/${question.id}`}
+                        href={`/question/${question.id}?bankId=${bankId}`}
                         className="text-primary hover:underline"
                       >
                         {question.title}
