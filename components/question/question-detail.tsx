@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import "@uiw/react-markdown-preview/markdown.css";
 import { getQuestionById, getQuestionCatalog } from "@/lib/api/question";
-import { useCurrentUser } from "@/hooks/use-auth";
+import { useCurrentUser, useUserSettings } from "@/hooks/use-auth";
+import { useUserStore } from "@/store/user-store";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { AnswerDialog } from "@/components/question/answer-dialog";
 import { QuestionComments } from "@/components/question/question-comments";
@@ -30,17 +31,54 @@ interface QuestionDetailProps {
 }
 
 export function QuestionDetail({ questionId, bankId }: QuestionDetailProps) {
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [showAnswerDialog, setShowAnswerDialog] = useState(false);
-  const [commentsRefetch, setCommentsRefetch] = useState<(() => void) | null>(null);
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [commentsRefetch, setCommentsRefetch] = useState<(() => void) | null>(
+    null
+  );
   const searchParams = useSearchParams();
   const router = useRouter();
   const urlBankId = searchParams.get("bankId");
 
-  // 获取当前用户登录状态
-  const { data: currentUser } = useCurrentUser();
+  // 获取当前用户登录状态和设置
+  const { data: currentUser, isLoading: userLoading } = useCurrentUser();
+  const { isLoading: settingsLoading } = useUserSettings();
+  const { settings, settingsLoaded } = useUserStore();
   const isLoggedIn = !!currentUser;
+
+  // 获取用户设置：默认是否显示答案
+  const defaultShowAnswer = settings.showAnswer === "true";
+
+  // 计算初始显示答案状态
+  const [showAnswer, setShowAnswer] = useState(() => {
+    if (!isLoggedIn) {
+      // 未登录用户默认不显示答案
+      return false;
+    }
+    // 登录用户根据设置决定，如果未设置则默认不显示
+    return defaultShowAnswer;
+  });
+
+  // 当设置加载完成后，重新计算显示状态
+  useEffect(() => {
+    if (isLoggedIn && !settingsLoading) {
+      setShowAnswer(defaultShowAnswer);
+    }
+  }, [isLoggedIn, settingsLoading, defaultShowAnswer]);
+
+  // 专门监听设置变化，当设置更新时立即响应
+  useEffect(() => {
+    if (isLoggedIn && settingsLoaded) {
+      // 只有当 settings 实际有变化时才更新
+      setShowAnswer((prevAnswer) => {
+        const shouldShow = defaultShowAnswer;
+        if (prevAnswer !== shouldShow) {
+          return shouldShow;
+        }
+        return prevAnswer;
+      });
+    }
+  }, [isLoggedIn, settingsLoaded, settings.showAnswer, defaultShowAnswer]);
 
   // 使用传入的bankId或URL中的bankId
   const currentBankId = bankId
@@ -100,7 +138,13 @@ export function QuestionDetail({ questionId, bankId }: QuestionDetailProps) {
     }
   };
 
-  if (isLoading || (currentBankId && bankQuestionsLoading)) {
+  // 如果用户信息或设置正在加载，显示加载状态
+  if (
+    userLoading ||
+    (isLoggedIn && settingsLoading) ||
+    isLoading ||
+    (currentBankId && bankQuestionsLoading)
+  ) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
@@ -222,6 +266,7 @@ export function QuestionDetail({ questionId, bankId }: QuestionDetailProps) {
               )}
               <Button
                 variant="outline"
+                title="可在用户中心设置默认是否显示"
                 onClick={() => setShowAnswer((prev) => !prev)}
               >
                 {showAnswer ? "隐藏答案" : "显示答案"}
@@ -247,6 +292,7 @@ export function QuestionDetail({ questionId, bankId }: QuestionDetailProps) {
               <Button
                 variant="outline"
                 size="sm"
+                title="可在用户中心设置默认是否显示"
                 onClick={() => {
                   if (isLoggedIn) {
                     setShowAnswer(true);
@@ -297,11 +343,15 @@ export function QuestionDetail({ questionId, bankId }: QuestionDetailProps) {
         )}
 
         {/* 评论模块 - 在翻页模块后添加适当间距 */}
-        <div className={currentBankId && (prevQuestion || nextQuestion) ? "mt-6" : ""}>
-          <QuestionComments 
+        <div
+          className={
+            currentBankId && (prevQuestion || nextQuestion) ? "mt-6" : ""
+          }
+        >
+          <QuestionComments
             questionId={questionId}
-            ref={(ref: any) => {
-              if (ref && typeof ref.refetch === 'function') {
+            ref={(ref: { refetch?: () => void } | null) => {
+              if (ref && typeof ref.refetch === "function") {
                 setCommentsRefetch(() => ref.refetch);
               }
             }}
@@ -311,7 +361,7 @@ export function QuestionDetail({ questionId, bankId }: QuestionDetailProps) {
 
       {/* 登录对话框 */}
       <AuthDialog open={showAuthDialog} onOpenChange={setShowAuthDialog} />
-      
+
       {/* 回答对话框 */}
       {question && (
         <AnswerDialog

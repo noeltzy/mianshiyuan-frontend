@@ -1,9 +1,38 @@
+import React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { login, register, logout, getCurrentUser } from "@/lib/api/auth";
+import { getUserSettings } from "@/lib/api/user-settings";
 import { useUserStore } from "@/store/user-store";
 import { getToken } from "@/lib/utils/token";
 import type { LoginRequest, RegisterRequest } from "@/lib/api/auth";
-import type { User } from "@/types";
+import type { User, UserSetting } from "@/types";
+
+/**
+ * 获取用户设置信息的 Hook
+ */
+export function useUserSettings() {
+  const { setSettings } = useUserStore();
+  const token = typeof window !== "undefined" ? getToken() : null;
+  const isLoggedIn = !!token;
+
+  return useQuery({
+    queryKey: ["userSettings"],
+    queryFn: async () => {
+      const settings = await getUserSettings();
+      // 将设置数组转换为键值对格式
+      const settingsMap = settings.reduce((acc, setting) => {
+        acc[setting.settingKey] = setting.settingValue;
+        return acc;
+      }, {} as Record<string, string>);
+      
+      setSettings(settingsMap);
+      return settingsMap;
+    },
+    enabled: isLoggedIn, // 只有登录时才获取设置
+    staleTime: 0, // 设置为0确保总是获取最新数据
+    gcTime: 5 * 60 * 1000, // 5分钟缓存时间
+  });
+}
 
 /**
  * 获取当前用户信息的 Hook
@@ -38,9 +67,10 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: (credentials: LoginRequest) => login(credentials),
-    onSuccess: async () => {
-      // 登录成功后获取用户信息
+    onSuccess: async (data) => {
+      // 登录成功后获取用户信息和设置
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      await queryClient.invalidateQueries({ queryKey: ["userSettings"] });
     },
   });
 }

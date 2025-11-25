@@ -9,6 +9,11 @@ export interface User {
   role?: "USER" | "ADMIN" | "REVIEWER";
 }
 
+export interface UserSetting {
+  settingKey: string;
+  settingValue: string;
+}
+
 // API 响应类型
 export interface ApiResponse<T = any> {
   code: number;

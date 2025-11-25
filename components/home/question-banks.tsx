@@ -14,7 +14,8 @@ export function QuestionBanks() {
   const pageSize = 20;
 
   // 获取标签列表
-  const { data: tags = [], isLoading: tagsLoading } = useTags();
+  const { data: tagsData, isLoading: tagsLoading } = useTags();
+  const tags = Array.isArray(tagsData) ? tagsData : [];
 
   // 获取题库列表
   const {

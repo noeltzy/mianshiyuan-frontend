@@ -7,9 +7,10 @@ import { getQuestionComments, submitQuestionComment } from "@/lib/api/question";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { Button } from "@/components/ui/button";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Heart, Send, User } from "lucide-react";
 import type { CommentVO } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 interface QuestionCommentsProps {
   questionId: number;
@@ -65,32 +66,24 @@ function CommentItem({
 }: CommentItemProps) {
   const commentTypeInfo = getCommentTypeInfo(comment.commentType);
   const isSubComment = level > 1; // 判断是否是子评论
+  const avatarUrl = comment.userVO?.avatarUrl;
+  const displayName =
+    comment.userVO?.nickname || comment.userVO?.username || "匿名用户";
 
   return (
     <div
       className={`flex space-x-3 ${isSubComment ? "ml-6 border-l-2 border-gray-200 pl-4" : ""}`}
     >
       <Avatar className="h-8 w-8 flex-shrink-0">
-        <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
-          {comment.userVO.avatarUrl ? (
-            <Image
-              src={comment.userVO.avatarUrl}
-              alt={comment.userVO.username}
-              fill
-              className="rounded-full object-cover"
-              sizes="32px"
-            />
-          ) : (
+        <AvatarImage src={avatarUrl || ""} alt={displayName} />
+        <AvatarFallback className="bg-gray-200">
             <User className="h-4 w-4 text-gray-500" />
-          )}
-        </div>
+        </AvatarFallback>
       </Avatar>
 
       <div className="flex-1 space-y-2">
         <div className="flex items-center space-x-2">
-          <span className="text-sm font-medium text-gray-900">
-            {comment.userVO.nickname || comment.userVO.username}
-          </span>
+          <span className="text-sm font-medium text-gray-900">{displayName}</span>
 
           {/* 根评论才显示评论类型标签 */}
           {isRootComment && (
@@ -140,6 +133,7 @@ export const QuestionComments = forwardRef<
   const [replyToComment, setReplyToComment] = useState<CommentVO | null>(null);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   // 获取当前用户登录状态
   const { data: currentUser } = useCurrentUser();
@@ -170,6 +164,11 @@ export const QuestionComments = forwardRef<
     }
 
     if (!newComment.trim()) {
+      toast({
+        title: "操作失败",
+        description: "评论内容不能为空",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -193,8 +192,14 @@ export const QuestionComments = forwardRef<
       console.log(replyToComment ? "回复成功" : "评论成功");
     } catch (error) {
       console.error("发表评论失败:", error);
-      // 这里可以添加更好的错误处理，比如显示toast提示
-      alert(replyToComment ? "回复失败，请稍后重试" : "评论失败，请稍后重试");
+      // 使用 toast 替换 alert
+      toast({
+        title: replyToComment ? "回复失败" : "评论失败",
+        description: replyToComment
+          ? "回复失败，请稍后重试"
+          : "评论失败，请稍后重试",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -209,7 +214,12 @@ export const QuestionComments = forwardRef<
 
     // 只允许回复根节点评论（没有parentId的评论）
     if (comment.parentId != null) {
-      alert("只能回复根节点评论");
+      // 使用 toast 替换 alert
+      toast({
+        title: "操作失败",
+        description: "只能回复根节点评论",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -330,19 +340,13 @@ export const QuestionComments = forwardRef<
 
         <div className="flex space-x-3">
           <Avatar className="h-8 w-8 flex-shrink-0">
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-200">
-              {currentUser?.avatarUrl ? (
-                <Image
-                  src={currentUser.avatarUrl}
-                  alt={currentUser.username}
-                  fill
-                  className="rounded-full object-cover"
-                  sizes="32px"
-                />
-              ) : (
+            <AvatarImage
+              src={currentUser?.avatarUrl || ""}
+              alt={currentUser?.username || "当前用户"}
+            />
+            <AvatarFallback className="bg-gray-200">
                 <User className="h-4 w-4 text-gray-500" />
-              )}
-            </div>
+            </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 space-y-2">
