@@ -7,8 +7,8 @@ import { getQuestionComments, submitQuestionComment } from "@/lib/api/question";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { AuthDialog } from "@/components/auth/auth-dialog";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Heart, Send, User } from "lucide-react";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { MessageCircle, Heart, Send } from "lucide-react";
 import type { CommentVO } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -75,10 +75,7 @@ function CommentItem({
       className={`flex space-x-3 ${isSubComment ? "ml-6 border-l-2 border-gray-200 pl-4" : ""}`}
     >
       <Avatar className="h-8 w-8 flex-shrink-0">
-        <AvatarImage src={avatarUrl || ""} alt={displayName} />
-        <AvatarFallback className="bg-gray-200">
-            <User className="h-4 w-4 text-gray-500" />
-        </AvatarFallback>
+        <AvatarImage src={avatarUrl || "/images/default-avatar.png"} alt={displayName} />
       </Avatar>
 
       <div className="flex-1 space-y-2">
@@ -341,12 +338,9 @@ export const QuestionComments = forwardRef<
         <div className="flex space-x-3">
           <Avatar className="h-8 w-8 flex-shrink-0">
             <AvatarImage
-              src={currentUser?.avatarUrl || ""}
+              src={currentUser?.avatarUrl || "/images/default-avatar.png"}
               alt={currentUser?.username || "当前用户"}
             />
-            <AvatarFallback className="bg-gray-200">
-                <User className="h-4 w-4 text-gray-500" />
-            </AvatarFallback>
           </Avatar>
 
           <div className="flex-1 space-y-2">

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUserStore } from "@/store/user-store";
 import { useCurrentUser } from "@/hooks/use-auth";
 import { AuthDialog } from "@/components/auth/auth-dialog";
@@ -32,9 +32,14 @@ export function Navbar() {
             <div className="flex h-16 items-center justify-between gap-6 flex-wrap md:flex-nowrap">
               {/* Logo */}
               <Link href="/" className="flex items-center gap-2.5 font-bold">
-                <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-white">
-                  猿
-                </span>
+                <Image
+                  src="/logo.svg"
+                  alt="面试猿"
+                  width={28}
+                  height={28}
+                  className="h-7 w-7"
+                  priority
+                />
                 <span className="whitespace-nowrap">面试猿刷题</span>
               </Link>
 
@@ -83,11 +88,13 @@ export function Navbar() {
                     onClick={() => setAuthDialogOpen(true)}
                     className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
                   >
-                    <Avatar className="h-7 w-7">
-                      <AvatarFallback className="bg-gray-200 text-gray-600 text-xs font-bold border border-gray-300">
-                        U
-                      </AvatarFallback>
-                    </Avatar>
+                    <Image
+                      src="/images/default-avatar.png"
+                      alt="未登录"
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
                     <span className="font-semibold text-gray-700 whitespace-nowrap">
                       未登录
                     </span>

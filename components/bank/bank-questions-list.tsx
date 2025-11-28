@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { listQuestions } from "@/lib/api/question";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, Award } from "lucide-react";
 
 interface BankQuestionsListProps {
   bankId: number;
@@ -15,6 +15,39 @@ const difficultyMap: Record<number, { label: string; className: string }> = {
   0: { label: "简单", className: "bg-emerald-100 text-emerald-700" },
   1: { label: "中等", className: "bg-blue-100 text-blue-700" },
   2: { label: "困难", className: "bg-purple-100 text-purple-700" },
+};
+
+// 根据分数获取颜色配置（分4档）
+const getScoreStyle = (score: number) => {
+  if (score >= 90) {
+    // 优秀：金色
+    return {
+      iconColor: "text-amber-500",
+      textColor: "text-amber-600",
+      bgColor: "bg-amber-50",
+    };
+  } else if (score >= 80) {
+    // 良好：绿色
+    return {
+      iconColor: "text-emerald-500",
+      textColor: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+    };
+  } else if (score >= 70) {
+    // 中等：蓝色
+    return {
+      iconColor: "text-blue-500",
+      textColor: "text-blue-600",
+      bgColor: "bg-blue-50",
+    };
+  } else {
+    // 较差：灰色
+    return {
+      iconColor: "text-gray-400",
+      textColor: "text-gray-600",
+      bgColor: "bg-gray-50",
+    };
+  }
 };
 
 const pageSize = 10;
@@ -70,6 +103,8 @@ export function BankQuestionsList({ bankId }: BankQuestionsListProps) {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
+                {/* 分数列 - 无表头 */}
+                <th className="w-24"></th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   题目名称
                 </th>
@@ -94,8 +129,33 @@ export function BankQuestionsList({ bankId }: BankQuestionsListProps) {
                         className: "bg-gray-100 text-gray-600",
                       };
 
+                // 获取 bestScore
+                const bestScore =
+                  question.extMap && question.extMap.bestScore
+                    ? question.extMap.bestScore
+                    : null;
+
+                // 将分数转为数字并获取对应样式
+                const scoreNum = bestScore ? parseFloat(bestScore) : 0;
+                const scoreStyle = bestScore ? getScoreStyle(scoreNum) : null;
+
                 return (
                   <tr key={question.id} className="hover:bg-gray-50">
+                    {/* 分数列 */}
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      {bestScore && scoreStyle && (
+                        <div
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ${scoreStyle.bgColor}`}
+                        >
+                          <Award className={`h-4 w-4 ${scoreStyle.iconColor}`} />
+                          <span
+                            className={`text-sm font-semibold ${scoreStyle.textColor}`}
+                          >
+                            {bestScore}
+                          </span>
+                        </div>
+                      )}
+                    </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">
                       <Link
                         href={`/question/${question.id}?bankId=${bankId}`}

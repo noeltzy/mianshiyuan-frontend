@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Search, Edit, X } from "lucide-react";
+import { Plus, Search, Edit, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,9 +12,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   listBanks,
   createBank,
   updateBank,
+  deleteBank,
   getAllTags,
   type BankCreateRequest,
   type BankUpdateRequest,
@@ -50,6 +61,8 @@ export function BanksManagement() {
     new Set()
   );
   const [detailError, setDetailError] = useState<string | null>(null);
+  const [deletingBank, setDeletingBank] = useState<BankVO | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const pageSize = 10;
   const detailPageSize = 8;
@@ -157,6 +170,16 @@ export function BanksManagement() {
     },
   });
 
+  // 删除题库
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteBank(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["adminBanks"] });
+      setDeleteDialogOpen(false);
+      setDeletingBank(null);
+    },
+  });
+
   const addTag = (tag: string) => {
     const normalized = tag.trim();
     if (!normalized) {
@@ -217,6 +240,17 @@ export function BanksManagement() {
     setUploadError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDelete = (bank: BankVO) => {
+    setDeletingBank(bank);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deletingBank?.id) {
+      deleteMutation.mutate(deletingBank.id);
     }
   };
 
@@ -506,6 +540,14 @@ export function BanksManagement() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(bank)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -724,6 +766,28 @@ export function BanksManagement() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 删除确认对话框 */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除题库</AlertDialogTitle>
+            <AlertDialogDescription>
+              你确定要删除题库「{deletingBank?.name}」吗？此操作将解绑题库中的所有题目，题目本身会保留。此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteMutation.isPending ? "删除中..." : "确认删除"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* 创建/编辑对话框 */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

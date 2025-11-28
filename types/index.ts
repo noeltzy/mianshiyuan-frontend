@@ -30,6 +30,7 @@ export interface BankVO {
   coverImage?: string;
   creatorId?: number;
   status?: number;
+  isPublic?: number; // 0=私密, 1=公开
   reviewId?: number;
   createdAt?: string;
   updatedAt?: string;
@@ -96,6 +97,7 @@ export interface QuestionVO {
   reviewId?: number;
   createdAt?: string;
   updatedAt?: string;
+  extMap?: Record<string, string> | null; // 扩展字段，可能为null
 }
 
 // 分页题目响应类型

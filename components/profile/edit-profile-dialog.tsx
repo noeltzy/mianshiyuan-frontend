@@ -6,7 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImagePlus, Loader2 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -38,15 +38,9 @@ import {
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024; // 2MB
 
 const profileSchema = z.object({
-  avatarUrl: z
-    .string()
-    .url("请上传有效的头像地址")
-    .min(1, "请上传头像"),
+  avatarUrl: z.string().url("请上传有效的头像地址").min(1, "请上传头像"),
   nickname: z.string().min(1, "请输入昵称"),
-  email: z
-    .string()
-    .email("邮箱格式不正确")
-    .or(z.literal("")),
+  email: z.string().email("邮箱格式不正确").or(z.literal("")),
   phone: z
     .string()
     .regex(/^1[3-9]\d{9}$/, "手机号格式不正确")
@@ -60,7 +54,10 @@ interface EditProfileDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps) {
+export function EditProfileDialog({
+  open,
+  onOpenChange,
+}: EditProfileDialogProps) {
   const { user } = useUserStore();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -146,8 +143,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       } catch (error: any) {
         toast({
           title: "上传失败",
-          description:
-            error?.message || "上传出现异常，请稍后重试。",
+          description: error?.message || "上传出现异常，请稍后重试。",
           variant: "destructive",
         });
       } finally {
@@ -191,16 +187,10 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
           </div>
         ) : (
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-6"
-            >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={avatarPreview} alt={displayName} />
-                  <AvatarFallback className="bg-gray-200 text-gray-600">
-                    {avatarLetter}
-                  </AvatarFallback>
+                  <AvatarImage src={avatarPreview || "/images/default-avatar.png"} alt={displayName} />
                 </Avatar>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-900">
@@ -352,7 +342,3 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     </Dialog>
   );
 }
-
-
-
-

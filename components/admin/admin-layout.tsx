@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -59,9 +60,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
         <div className="flex items-center justify-between h-16 px-4">
           <Link href="/admin" className="flex items-center gap-2 font-bold">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-white">
-              管
-            </span>
+            <Image
+              src="/logo.svg"
+              alt="管理后台"
+              width={28}
+              height={28}
+              className="h-7 w-7"
+            />
             <span>管理后台</span>
           </Link>
           <button
@@ -88,9 +93,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
             <Link href="/admin" className="flex items-center gap-2 font-bold">
-              <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-white">
-                管
-              </span>
+              <Image
+                src="/logo.svg"
+                alt="管理后台"
+                width={28}
+                height={28}
+                className="h-7 w-7"
+              />
               <span>管理后台</span>
             </Link>
             <button

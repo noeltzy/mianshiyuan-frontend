@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -16,11 +16,12 @@ import {
 } from "@/store/user-store";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { MyQuestionsList } from "@/components/profile/my-questions-list";
+import { MyBanksList } from "@/components/profile/my-banks-list";
 import { MyAnswersList } from "@/components/profile/my-answers-list";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { SettingsDialog } from "@/components/profile/settings-dialog";
 
-type TabType = "create" | "favorite" | "answers";
+type TabType = "create" | "banks" | "favorite" | "answers";
 
 export function ProfilePage() {
   const { user } = useUserStore();
@@ -40,19 +41,30 @@ export function ProfilePage() {
 
   const tabs = [
     { key: "create" as TabType, label: "题目创建" },
+    { key: "banks" as TabType, label: "我的题库" },
     { key: "favorite" as TabType, label: "题目收藏" },
     { key: "answers" as TabType, label: "我的回答" },
   ];
 
   const quickLinks = [
-    { label: "个人信息", icon: UserRound, onClick: () => setEditDialogOpen(true) },
-    { label: "设置中心", icon: SettingsIcon, onClick: () => setSettingsDialogOpen(true) },
+    {
+      label: "个人信息",
+      icon: UserRound,
+      onClick: () => setEditDialogOpen(true),
+    },
+    {
+      label: "设置中心",
+      icon: SettingsIcon,
+      onClick: () => setSettingsDialogOpen(true),
+    },
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "create":
         return <MyQuestionsList />;
+      case "banks":
+        return <MyBanksList />;
       case "favorite":
         return (
           <div className="px-6 py-4 text-center text-gray-500">
@@ -80,12 +92,9 @@ export function ProfilePage() {
                 <div className="flex items-center gap-4 p-6">
                   <Avatar className="h-16 w-16">
                     <AvatarImage
-                      src={user.avatarUrl}
+                      src={user.avatarUrl || "/images/default-avatar.png"}
                       alt={getUserDisplayName(user)}
                     />
-                    <AvatarFallback className="border border-gray-300 bg-gray-200 text-lg font-bold text-gray-600">
-                      {getUserAvatarLetter(user)}
-                    </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
                     <p className="truncate text-lg font-semibold text-gray-900">
@@ -124,16 +133,20 @@ export function ProfilePage() {
               </h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">已答题库</span>
+                  <span className="text-gray-600">总均分</span>
                   <span className="font-medium text-gray-900">0 个</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">完成题目</span>
-                  <span className="font-medium text-gray-900">0 道</span>
+                  <span className="text-gray-600">简单</span>
+                  <span className="font-medium text-gray-900">0 分</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">学习时长</span>
-                  <span className="font-medium text-gray-900">0 小时</span>
+                  <span className="text-gray-600">中等</span>
+                  <span className="font-medium text-gray-900">0 分</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">困难</span>
+                  <span className="font-medium text-gray-900">0 分</span>
                 </div>
               </div>
             </div>
@@ -141,7 +154,7 @@ export function ProfilePage() {
 
           {/* 右侧 Tab 区域（6份） */}
           <div className="col-span-6">
-            <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col" style={{ height: "fit-content" }}>
               {/* Tab 导航 */}
               <div className="border-b border-gray-200">
                 <nav className="flex">
@@ -162,13 +175,19 @@ export function ProfilePage() {
               </div>
 
               {/* Tab 内容 */}
-              <div>{renderTabContent()}</div>
+              <div className="flex-1">{renderTabContent()}</div>
             </div>
           </div>
         </div>
       </div>
-      <EditProfileDialog open={editDialogOpen} onOpenChange={setEditDialogOpen} />
-      <SettingsDialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen} />
+      <EditProfileDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
+      <SettingsDialog
+        open={settingsDialogOpen}
+        onOpenChange={setSettingsDialogOpen}
+      />
     </AuthGuard>
   );
 }

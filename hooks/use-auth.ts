@@ -71,6 +71,11 @@ export function useLogin() {
       // 登录成功后获取用户信息和设置
       await queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       await queryClient.invalidateQueries({ queryKey: ["userSettings"] });
+      
+      // 失效所有题目相关的查询，确保登录后重新获取带有 bestScore 的数据
+      await queryClient.invalidateQueries({ queryKey: ["bankQuestions"] });
+      await queryClient.invalidateQueries({ queryKey: ["question"] });
+      await queryClient.invalidateQueries({ queryKey: ["questionCatalog"] });
     },
   });
 }

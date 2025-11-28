@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +28,7 @@ interface AuthDialogProps {
 export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const [mode, setMode] = useState<"login" | "register">("login");
   const { toast } = useToast();
+  const router = useRouter();
 
   // 分别为登录和注册创建独立的表单状态
   const loginForm = useForm<Pick<LoginRequest, "username" | "password">>({
@@ -69,6 +72,8 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       });
       onOpenChange(false);
       loginForm.reset();
+      // 刷新当前路由以更新数据
+      router.refresh();
     } catch (error) {
       toast({
         title: "登录失败",
@@ -92,6 +97,8 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
       });
       onOpenChange(false);
       registerForm.reset();
+      // 刷新当前路由以更新数据
+      router.refresh();
     } catch (error) {
       toast({
         title: "注册失败",
@@ -110,9 +117,13 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           {/* 左侧：Logo 和介绍 (3/10) */}
           <div className="col-span-3 flex h-full flex-col items-center justify-center bg-gradient-to-br from-primary to-gray-800 p-8 text-white">
             <div className="flex flex-col items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-white/20 text-3xl font-extrabold">
-                猿
-              </div>
+              <Image
+                src="/logo.svg"
+                alt="面试猿"
+                width={64}
+                height={64}
+                className="h-16 w-16"
+              />
               <h2 className="text-2xl font-bold">面试猿刷题</h2>
               <p className="mt-4 text-center text-sm text-white/80">
                 理论精通 • 概念理解 • 面试必备

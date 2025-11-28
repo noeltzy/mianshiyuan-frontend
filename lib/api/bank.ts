@@ -80,3 +80,25 @@ export async function updateBank(
   return response.data;
 }
 
+/**
+ * 删除题库（需要管理员权限）
+ */
+export async function deleteBank(id: number): Promise<void> {
+  await apiClient.delete(`/bank/${id}`);
+}
+
+/**
+ * 分页查询自己创建的题库列表
+ */
+export async function listMyBanks(
+  params?: BankQueryParams
+): Promise<PageBankVO> {
+  const response = await apiClient.get<ApiResponse<PageBankVO>>("/bank/my", {
+    params: {
+      current: params?.current || 1,
+      size: params?.size || 10,
+    },
+  });
+  return response.data.data;
+}
+

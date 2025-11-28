@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,15 +10,24 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useUserStore, getUserDisplayName, getUserAvatarLetter } from "@/store/user-store";
 import { useLogout } from "@/hooks/use-auth";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export function UserMenu() {
   const { user } = useUserStore();
   const logoutMutation = useLogout();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = async () => {
     await logoutMutation.mutateAsync();
+    
+    // 检测当前路径，如果在个人中心页面则跳转到主页
+    if (pathname === "/profile") {
+      router.push("/");
+    } else {
+      // 其他页面刷新路由
+      router.refresh();
+    }
   };
 
   const handleProfile = () => {
@@ -44,10 +53,10 @@ const handleAdminDashboard = () => {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
           <Avatar className="h-7 w-7">
-            <AvatarImage src={user.avatarUrl} alt={getUserDisplayName(user)} />
-            <AvatarFallback className="bg-gray-200 text-gray-600 text-xs font-bold border border-gray-300">
-              {getUserAvatarLetter(user)}
-            </AvatarFallback>
+            <AvatarImage 
+              src={user.avatarUrl || "/images/default-avatar.png"} 
+              alt={getUserDisplayName(user)} 
+            />
           </Avatar>
           <span className="font-semibold text-gray-700 whitespace-nowrap">
             {getUserDisplayName(user)}

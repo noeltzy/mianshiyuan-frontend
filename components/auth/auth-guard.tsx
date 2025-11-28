@@ -25,9 +25,9 @@ export function AuthGuard({ children }: AuthGuardProps) {
     if (!isMounted) {
       return;
     }
-    // 如果没有token，重定向到首页
+    // 如果没有token，重定向到首页并打开登录弹窗
     if (!token && !isLoading) {
-      router.replace("/");
+      router.replace("/?showLogin=true");
       return;
     }
   }, [token, isLoading, router, isMounted]);
