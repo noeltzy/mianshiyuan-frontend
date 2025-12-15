@@ -1,3 +1,6 @@
+// 导出 AI 相关类型
+export * from "./ai";
+
 // 用户相关类型
 export interface User {
   id: number;
@@ -7,6 +10,7 @@ export interface User {
   email?: string;
   phone?: string;
   role?: "USER" | "ADMIN" | "REVIEWER";
+  extMap?: Record<string, string>; // 扩展字段
 }
 
 export interface UserSetting {

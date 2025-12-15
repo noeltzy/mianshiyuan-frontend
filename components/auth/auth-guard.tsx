@@ -13,7 +13,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [token, setTokenState] = useState<string | null>(null);
-  const { isLoading } = useCurrentUser();
+  const { isFetching } = useCurrentUser();
 
   useEffect(() => {
     // 仅在客户端执行
@@ -26,16 +26,16 @@ export function AuthGuard({ children }: AuthGuardProps) {
       return;
     }
     // 如果没有token，重定向到首页并打开登录弹窗
-    if (!token && !isLoading) {
+    if (!token) {
       router.replace("/?showLogin=true");
       return;
     }
-  }, [token, isLoading, router, isMounted]);
+  }, [token, router, isMounted]);
 
   // 初次渲染时（服务端或尚未挂载）保持占位，避免水合不一致
   if (!isMounted) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
           <p className="mt-4 text-gray-600">加载中...</p>
@@ -44,22 +44,10 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
-  // 加载中时显示加载状态
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 如果没有token，显示提示
+  // 如果没有token，显示提示（同时会重定向）
   if (!token) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="text-lg font-semibold text-gray-900">请先登录</p>
           <p className="mt-2 text-gray-600">您需要登录后才能访问此页面</p>
@@ -68,6 +56,17 @@ export function AuthGuard({ children }: AuthGuardProps) {
     );
   }
 
+  // 有token时，如果正在获取用户信息则显示加载状态
+  if (isFetching) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+          <p className="mt-4 text-gray-600">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
   return <>{children}</>;
 }
-

@@ -16,3 +16,13 @@ export async function updateUserProfile(data: UpdateUserRequest): Promise<boolea
   return true;
 }
 
+/**
+ * 更新用户简历
+ */
+export async function updateResume(objectName: string): Promise<boolean> {
+  const response = await apiClient.post<ApiResponse<boolean>>("/user/resume", {
+    objectName,
+  });
+  return response.data.data;
+}
+

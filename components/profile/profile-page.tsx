@@ -3,9 +3,17 @@
 import { useState } from "react";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import {
   ChevronRight,
+  FileText,
+  FileUp,
   Settings as SettingsIcon,
   UserRound,
 } from "lucide-react";
@@ -20,6 +28,7 @@ import { MyBanksList } from "@/components/profile/my-banks-list";
 import { MyAnswersList } from "@/components/profile/my-answers-list";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { SettingsDialog } from "@/components/profile/settings-dialog";
+import { UploadResumeDialog } from "@/components/profile/upload-resume-dialog";
 
 type TabType = "create" | "banks" | "favorite" | "answers";
 
@@ -28,6 +37,7 @@ export function ProfilePage() {
   const [activeTab, setActiveTab] = useState<TabType>("create");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [uploadResumeDialogOpen, setUploadResumeDialogOpen] = useState(false);
 
   if (!user) {
     return (
@@ -51,6 +61,11 @@ export function ProfilePage() {
       label: "个人信息",
       icon: UserRound,
       onClick: () => setEditDialogOpen(true),
+    },
+    {
+      label: "上传简历",
+      icon: FileUp,
+      onClick: () => setUploadResumeDialogOpen(true),
     },
     {
       label: "设置中心",
@@ -97,8 +112,28 @@ export function ProfilePage() {
                     />
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-lg font-semibold text-gray-900">
+                    <p className="truncate text-lg font-semibold text-gray-900 flex items-center gap-1.5">
                       {getUserDisplayName(user)}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <FileText
+                              className={`h-4 w-4 flex-shrink-0 cursor-default ${
+                                user.extMap?.resume === "true"
+                                  ? "text-primary"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>
+                              {user.extMap?.resume === "true"
+                                ? "已上传简历"
+                                : "未上传简历"}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </p>
                     <p className="truncate text-sm text-gray-500">
                       {user.email || "未设置邮箱"}
@@ -187,6 +222,10 @@ export function ProfilePage() {
       <SettingsDialog
         open={settingsDialogOpen}
         onOpenChange={setSettingsDialogOpen}
+      />
+      <UploadResumeDialog
+        open={uploadResumeDialogOpen}
+        onOpenChange={setUploadResumeDialogOpen}
       />
     </AuthGuard>
   );
