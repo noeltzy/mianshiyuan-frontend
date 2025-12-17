@@ -152,17 +152,17 @@ export function UploadResumeDialog({
         <div className="space-y-4 py-4">
           {/* 文件选择区域 */}
           <div
-            className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
+            className={`relative rounded-lg border-2 border-dashed p-6 transition-colors ${
               selectedFile
                 ? "border-primary bg-primary/5"
                 : "border-gray-300 hover:border-gray-400"
             }`}
           >
             {!selectedFile ? (
-              <label className="flex flex-col items-center cursor-pointer">
-                <FileUp className="h-10 w-10 text-gray-400 mb-2" />
+              <label className="flex cursor-pointer flex-col items-center">
+                <FileUp className="mb-2 h-10 w-10 text-gray-400" />
                 <span className="text-sm text-gray-600">点击选择文件</span>
-                <span className="text-xs text-gray-400 mt-1">
+                <span className="mt-1 text-xs text-gray-400">
                   仅支持 PDF 格式
                 </span>
                 <input
@@ -182,8 +182,8 @@ export function UploadResumeDialog({
                     <File className="h-10 w-10 text-primary" />
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-gray-900">
                     {selectedFile.name}
                   </p>
                   <p className="text-xs text-gray-500">
@@ -194,7 +194,9 @@ export function UploadResumeDialog({
                   <button
                     type="button"
                     onClick={handleRemoveFile}
-                    className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100"
+                    className="flex-shrink-0 rounded-full p-1 hover:bg-gray-100"
+                    aria-label="移除已选择的文件"
+                    title="移除已选择的文件"
                   >
                     <X className="h-5 w-5 text-gray-400" />
                   </button>
@@ -236,4 +238,3 @@ export function UploadResumeDialog({
     </Dialog>
   );
 }
-
