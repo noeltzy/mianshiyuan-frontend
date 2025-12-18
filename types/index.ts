@@ -1,6 +1,16 @@
 // 导出 AI 相关类型
 export * from "./ai";
 
+// 用户求职档案
+export interface UserProfile {
+  level?: number; // 当前水平分数 0~100
+  skillTags?: string; // 技能标签（JSON 格式字符串数组）
+  mainLanguage?: string; // 主要编程语言
+  target?: string; // 目标职位/公司
+  targetLevel?: number; // 目标等级: 0=小厂, 1=中厂, 2=大厂
+  targetType?: number; // 求职类型: 0=日常实习, 1=转正实习, 2=校招, 3=社招
+}
+
 // 用户相关类型
 export interface User {
   id: number;
@@ -10,6 +20,7 @@ export interface User {
   email?: string;
   phone?: string;
   role?: "USER" | "ADMIN" | "REVIEWER";
+  profile?: UserProfile; // 求职档案（仅 currentUser 返回）
   extMap?: Record<string, string>; // 扩展字段
 }
 
@@ -183,5 +194,28 @@ export interface PageQuestionAnswerVO {
   size: number;
   current: number;
   pages?: number;
+}
+
+// 难度统计类型
+export interface DifficultyStatsVO {
+  difficulty: number; // 难度等级
+  difficultyName: string; // 难度名称
+  averageScore: number; // 平均分
+  questionCount: number; // 题目数
+  maxScore: number; // 最高分
+  minScore: number; // 最低分
+}
+
+// 用户答题统计类型
+export interface UserAnswerStatsVO {
+  userId: number;
+  overallAverageScore: number; // 总均分
+  totalQuestionCount: number; // 回答的总题目数
+  overallMaxScore: number; // 总最高分
+  overallMinScore: number; // 总最低分
+  difficultyStatsMap?: Record<string, DifficultyStatsVO>; // 按难度分组的统计
+  easyStats?: DifficultyStatsVO; // 简单难度统计
+  mediumStats?: DifficultyStatsVO; // 中等难度统计
+  hardStats?: DifficultyStatsVO; // 困难难度统计
 }
 

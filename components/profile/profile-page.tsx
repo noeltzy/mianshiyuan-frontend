@@ -29,6 +29,9 @@ import { MyAnswersList } from "@/components/profile/my-answers-list";
 import { EditProfileDialog } from "@/components/profile/edit-profile-dialog";
 import { SettingsDialog } from "@/components/profile/settings-dialog";
 import { UploadResumeDialog } from "@/components/profile/upload-resume-dialog";
+import { JobProfileCard } from "@/components/profile/job-profile-card";
+import { EditJobProfileDialog } from "@/components/profile/edit-job-profile-dialog";
+import { LearningStatsCard } from "@/components/profile/learning-stats-card";
 
 type TabType = "create" | "banks" | "favorite" | "answers";
 
@@ -38,6 +41,8 @@ export function ProfilePage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
   const [uploadResumeDialogOpen, setUploadResumeDialogOpen] = useState(false);
+  const [editJobProfileDialogOpen, setEditJobProfileDialogOpen] =
+    useState(false);
 
   if (!user) {
     return (
@@ -112,7 +117,7 @@ export function ProfilePage() {
                     />
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="truncate text-lg font-semibold text-gray-900 flex items-center gap-1.5">
+                    <p className="flex items-center gap-1.5 truncate text-lg font-semibold text-gray-900">
                       {getUserDisplayName(user)}
                       <TooltipProvider>
                         <Tooltip>
@@ -161,35 +166,23 @@ export function ProfilePage() {
               </CardContent>
             </Card>
 
+            {/* 求职档案 */}
+            <JobProfileCard
+              profile={user.profile}
+              extMap={user.extMap}
+              onEdit={() => setEditJobProfileDialogOpen(true)}
+            />
+
             {/* 学习统计 */}
-            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                学习统计
-              </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">总均分</span>
-                  <span className="font-medium text-gray-900">0 个</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">简单</span>
-                  <span className="font-medium text-gray-900">0 分</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">中等</span>
-                  <span className="font-medium text-gray-900">0 分</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">困难</span>
-                  <span className="font-medium text-gray-900">0 分</span>
-                </div>
-              </div>
-            </div>
+            <LearningStatsCard />
           </div>
 
           {/* 右侧 Tab 区域（6份） */}
           <div className="col-span-6">
-            <div className="rounded-lg border border-gray-200 bg-white shadow-sm flex flex-col" style={{ height: "fit-content" }}>
+            <div
+              className="flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm"
+              style={{ height: "fit-content" }}
+            >
               {/* Tab 导航 */}
               <div className="border-b border-gray-200">
                 <nav className="flex">
@@ -226,6 +219,11 @@ export function ProfilePage() {
       <UploadResumeDialog
         open={uploadResumeDialogOpen}
         onOpenChange={setUploadResumeDialogOpen}
+      />
+      <EditJobProfileDialog
+        open={editJobProfileDialogOpen}
+        onOpenChange={setEditJobProfileDialogOpen}
+        profile={user.profile}
       />
     </AuthGuard>
   );
